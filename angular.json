@@ -122,5 +122,8 @@
       }
     }
   },
-  "defaultProject": "d3ng"
+  "defaultProject": "d3ng",
+  "cli": {
+    "defaultCollection": "@ngrx/schematics"
+  }
 }

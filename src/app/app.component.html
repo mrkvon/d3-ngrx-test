@@ -1,16 +1,1 @@
-<svg>
-  <line
-    *ngFor="let edge of graph.edges"
-    [attr.x1]="edge[0].x"
-    [attr.y1]="edge[0].y"
-    [attr.x2]="edge[1].x"
-    [attr.y2]="edge[1].y"
-  />
-  <circle
-    *ngFor="let node of graph.nodes; index as i"
-    r="10"
-    (click)="onCircleClick(i)"
-    [attr.cx]="node.x"
-    [attr.cy]="node.y"
-  />
-</svg>
+<app-graph-page></app-graph-page>
