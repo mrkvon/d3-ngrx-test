@@ -69,6 +69,9 @@ export class GraphPageComponent implements OnInit {
       )
       .subscribe((nodes) => {
         const nodeCount = nodes.length;
+
+        if (nodeCount < 1) return;
+
         const edgesBefore = generateEdges(nodeCount);
         const edgesAfter = generateEdges(nodeCount - 1);
         const edgeIdsToRemove = edgesBefore.filter(edge => !edgesAfter.map(e => e.id).includes(edge.id))
