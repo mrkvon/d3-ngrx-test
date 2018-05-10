@@ -65,7 +65,7 @@ export function reducer(
 
     case NodeActionTypes.ToggleNodeSelection: {
       // add or remove a node with given id to selected node ids
-      if (state.ids.includes(action.payload.id)) {
+      if ((state.ids as string[]).includes(action.payload.id)) {
         if (state.selectedIds.includes(action.payload.id)) {
           // add
           return {

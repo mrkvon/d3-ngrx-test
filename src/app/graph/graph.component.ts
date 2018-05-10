@@ -38,7 +38,7 @@ export class GraphComponent implements OnChanges, OnInit {
 
   private selectNode = () => {
     const point = d3.mouse(this.graphContainer.nativeElement);
-    const node: Node = this.simulation.find(...point, 20);
+    const node = this.simulation.find(point[0], point[1], 20) as Node;
 
     if (node) this.select.emit(node.id);
   }
