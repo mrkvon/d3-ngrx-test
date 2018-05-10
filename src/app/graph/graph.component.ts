@@ -83,11 +83,59 @@ export class GraphComponent implements OnChanges, OnInit {
       .force('link', d3.forceLink(edges))
       .force('center', d3.forceCenter(200, 200))
       .alphaTarget(1)
+      .on('tick', this.drawGraph.bind(this))
       .restart()
   }
 
+  private drawGraph() {
+    const graph = this.getGraph();
+    const context = this.graphContainer.nativeElement.getContext('2d');
 
-  get graph() {
+    const width = 400;
+    const height = 400;
+    context.clearRect(0, 0, width, height);
+    context.save();
+
+    context.beginPath();
+    graph.edges.forEach(drawLink);
+    context.lineWidth = 2;
+    context.strokeStyle = "lightgray";
+    context.stroke();
+
+    context.beginPath();
+    graph.nodes.filter(node => !graph.selectedNodes.includes(node)).forEach(drawNode);
+    context.fillStyle = '#88f';
+    context.fill();
+
+    context.beginPath();
+    graph.selectedNodes.forEach(drawNode);
+    context.fillStyle = '#f88';
+    context.fill();
+
+    context.fillStyle = 'black';
+    context.font = '16px sans-serif';
+    context.textBaseline = 'middle';
+    graph.selectedNodes.forEach(writeText);
+
+    context.restore();
+
+    function drawLink(d) {
+      context.moveTo(d[0].x, d[0].y);
+      context.lineTo(d[1].x, d[1].y);
+    }
+
+    function drawNode(d) {
+      context.moveTo(d.x + 3, d.y);
+      context.arc(d.x, d.y, 10, 0, 2 * Math.PI);
+    }
+
+    function writeText(d) {
+      context.fillText(d.id, d.x + 10, d.y);
+    }
+  }
+
+
+  private getGraph() {
     const nodes = this.simulation.nodes();
     const selectedNodes = nodes.filter(node => this.selectedNodes.map(selectedNode => selectedNode.id).includes(node['id']))
 

@@ -1,27 +1,8 @@
-<svg #graphContainer>
-  <line
-    *ngFor="let edge of graph.edges"
-    [attr.x1]="edge[0].x"
-    [attr.y1]="edge[0].y"
-    [attr.x2]="edge[1].x"
-    [attr.y2]="edge[1].y"
-  />
-  <circle
-    *ngFor="let node of graph.nodes"
-    r="10"
-    [attr.cx]="node.x"
-    [attr.cy]="node.y"
-    [ngClass]="graph.selectedNodes.includes(node) ? 'selected': ''"
-  />
-  <text
-    *ngFor="let node of graph.selectedNodes"
-    [attr.x]="node.x + 10"
-    [attr.y]="node.y + 5"
-  >
-    {{node.id}}
-  </text>
-
-</svg>
+<canvas
+  width="400"
+  height="400"
+  #graphContainer>
+</canvas>
 
 <!--div>
   nodes:
