@@ -45,7 +45,10 @@ export function reducer(
     }
 
     case NodeActionTypes.DeleteNode: {
-      return adapter.removeOne(action.payload.id, state);
+      const updatedState = (state.selectedIds.includes(action.payload.id))
+        ? { ...state, selectedIds: state.selectedIds.filter(id => id !== action.payload.id) }
+        : state;
+      return adapter.removeOne(action.payload.id, updatedState);
     }
 
     case NodeActionTypes.DeleteNodes: {
@@ -61,13 +64,16 @@ export function reducer(
     }
 
     case NodeActionTypes.ToggleNodeSelection: {
+      // add or remove a node with given id to selected node ids
       if (state.ids.includes(action.payload.id)) {
         if (state.selectedIds.includes(action.payload.id)) {
+          // add
           return {
             ...state,
             selectedIds: state.selectedIds.filter(id => id !== action.payload.id)
           };
         } else {
+          // remove
           return {
             ...state,
             selectedIds: [...state.selectedIds, action.payload.id]
@@ -91,6 +97,9 @@ export const {
 
 export const getSelectedIds = (state: State) => state.selectedIds;
 
+/**
+ * get selected nodes
+ */
 export const getSelected = createSelector(
   getSelectedIds,
   selectEntities,

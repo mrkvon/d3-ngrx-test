@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { Observable, fromEvent } from 'rxjs';
-import { withLatestFrom, map, tap } from 'rxjs/operators';
+import { withLatestFrom, map } from 'rxjs/operators';
 
 import * as nodeActions from 'src/app/node.actions';
 import * as edgeActions from 'src/app/edge.actions';
@@ -18,10 +18,9 @@ import * as fromRoot from 'src/app/reducers';
 })
 export class GraphPageComponent implements OnInit {
 
+  // buttons for adding and removing nodes
   @ViewChild('addNodeButton') addNodeButton;
   @ViewChild('removeNodeButton') removeNodeButton;
-  addNodeClicks$: Observable<void>;
-  removeNodeClicks$: Observable<void>;
 
   nodes$: Observable<Node[]>;
   edges$: Observable<Edge[]>;
@@ -29,7 +28,11 @@ export class GraphPageComponent implements OnInit {
 
   constructor(private store: Store<fromRoot.State>) {
     // initialize graph
+    //
+    // number of vertices
     const nodeCount = 8;
+    // Generate nodes and edges with utility functions (below)
+    // The graph is a hypercube
     this.store.dispatch(new nodeActions.AddNodes({ nodes: generateNodes(nodeCount) }));
     this.store.dispatch(new edgeActions.AddEdges({ edges: generateEdges(nodeCount) }));
 
@@ -39,24 +42,40 @@ export class GraphPageComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.addNodeClicks$ = fromEvent(this.addNodeButton.nativeElement, 'click')
+
+    // create observable for processing add node button click
+    // and subscribe and in subscription dispatch action to create additional nodes and edges
+    fromEvent(this.addNodeButton.nativeElement, 'click')
       .pipe(
         withLatestFrom(this.nodes$),
         map(([_a, nodes]) => nodes)
       )
       .subscribe((nodes) => {
         const nodeCount = nodes.length;
+        const edgesBefore = generateEdges(nodeCount);
+        const edgesAfter = generateEdges(nodeCount + 1);
+        const additionalEdges = edgesAfter.filter(edge => !edgesBefore.map(e => e.id).includes(edge.id))
+
+        this.store.dispatch(new edgeActions.AddEdges({ edges: additionalEdges }));
         this.store.dispatch(new nodeActions.AddNode({ node: { id: String(nodes.length) } }))
-        this.store.dispatch(new edgeActions.AddEdges({ edges: generateEdges(nodeCount + 1) }));
       })
 
-    this.removeNodeClicks$ = fromEvent(this.removeNodeButton.nativeElement, 'click')
+    // create observable for processing remove node button click
+    // and subscribe and in subscription dispatch action to remove nodes and edges we want to remove
+    fromEvent(this.removeNodeButton.nativeElement, 'click')
       .pipe(
         withLatestFrom(this.nodes$),
         map(([_a, nodes]) => nodes)
       )
       .subscribe((nodes) => {
-        this.store.dispatch(new nodeActions.DeleteNode({ id: String(nodes.length - 1) }))
+        const nodeCount = nodes.length;
+        const edgesBefore = generateEdges(nodeCount);
+        const edgesAfter = generateEdges(nodeCount - 1);
+        const edgeIdsToRemove = edgesBefore.filter(edge => !edgesAfter.map(e => e.id).includes(edge.id))
+          .map(edge => edge.id)
+
+        this.store.dispatch(new edgeActions.DeleteEdges({ ids: edgeIdsToRemove }));
+        this.store.dispatch(new nodeActions.DeleteNode({ id: String(nodeCount - 1) }))
       })
   }
 
@@ -75,7 +94,9 @@ function generateNodes(n): Node[] {
 function generateEdges(n): Edge[] {
   const nodes = Array.from(Array(n).keys());
   const f = (a, b) => [].concat(...a.map(d => b.map(e => [].concat(d, e))));
-  const edges = f(nodes, nodes).filter(edge => bitCount(edge[0] ^ edge[1]) === 1)
+  const edges = f(nodes, nodes)
+    .filter(edge => edge[0] < edge[1] && bitCount(edge[0] ^ edge[1]) === 1)
+    .sort((a, b) => (a[1] > b[1]) ? 1 : (a[1] === b[1] && a[0] > b[0]) ? 1 : -1)
   return edges.map((edge, index) => ({ id: String(index), source: String(edge[0]), target: String(edge[1]) }))
 }
 

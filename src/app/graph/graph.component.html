@@ -1,4 +1,4 @@
-<svg>
+<svg #graphContainer>
   <line
     *ngFor="let edge of graph.edges"
     [attr.x1]="edge[0].x"
@@ -9,7 +9,6 @@
   <circle
     *ngFor="let node of graph.nodes"
     r="10"
-    (click)="onCircleClick(node.id)"
     [attr.cx]="node.x"
     [attr.cy]="node.y"
     [ngClass]="graph.selectedNodes.includes(node) ? 'selected': ''"
