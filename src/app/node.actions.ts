@@ -12,7 +12,8 @@ export enum NodeActionTypes {
   UpdateNodes = '[Node] Update Nodes',
   DeleteNode = '[Node] Delete Node',
   DeleteNodes = '[Node] Delete Nodes',
-  ClearNodes = '[Node] Clear Nodes'
+  ClearNodes = '[Node] Clear Nodes',
+  ToggleNodeSelection = '[Node] Toggle Node Selection'
 }
 
 export class LoadNodes implements Action {
@@ -73,6 +74,12 @@ export class ClearNodes implements Action {
   readonly type = NodeActionTypes.ClearNodes;
 }
 
+export class ToggleNodeSelection implements Action {
+  readonly type = NodeActionTypes.ToggleNodeSelection;
+
+  constructor(public payload: { id: string }) {}
+}
+
 export type NodeActions =
  LoadNodes
  | AddNode
@@ -83,4 +90,5 @@ export type NodeActions =
  | UpdateNodes
  | DeleteNode
  | DeleteNodes
- | ClearNodes;
+ | ClearNodes
+ | ToggleNodeSelection;

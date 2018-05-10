@@ -1,1 +1,11 @@
-<app-graph [nodes]="(nodes | async)" [edges]="(edges | async)"></app-graph>
+<app-graph
+  [nodes]="(nodes$ | async)"
+  [selectedNodes]="(selectedNodes$ | async)"
+  [edges]="(edges$ | async)"
+  (select)="onToggleSelection($event)"
+></app-graph>
+
+<div>
+  <button #addNodeButton>add node</button>
+  <button #removeNodeButton>remove node</button>
+</div>

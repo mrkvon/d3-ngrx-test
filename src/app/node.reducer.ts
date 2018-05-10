@@ -1,15 +1,18 @@
 import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
+import { createSelector } from '@ngrx/store';
 import { Node } from './node.model';
 import { NodeActions, NodeActionTypes } from './node.actions';
 
 export interface State extends EntityState<Node> {
   // additional entities state properties
+  selectedIds: string[];
 }
 
 export const adapter: EntityAdapter<Node> = createEntityAdapter<Node>();
 
 export const initialState: State = adapter.getInitialState({
   // additional entity state properties
+  selectedIds: []
 });
 
 export function reducer(
@@ -57,6 +60,22 @@ export function reducer(
       return adapter.removeAll(state);
     }
 
+    case NodeActionTypes.ToggleNodeSelection: {
+      if (state.ids.includes(action.payload.id)) {
+        if (state.selectedIds.includes(action.payload.id)) {
+          return {
+            ...state,
+            selectedIds: state.selectedIds.filter(id => id !== action.payload.id)
+          };
+        } else {
+          return {
+            ...state,
+            selectedIds: [...state.selectedIds, action.payload.id]
+          };
+        }
+      }
+    }
+
     default: {
       return state;
     }
@@ -69,3 +88,13 @@ export const {
   selectAll,
   selectTotal,
 } = adapter.getSelectors();
+
+export const getSelectedIds = (state: State) => state.selectedIds;
+
+export const getSelected = createSelector(
+  getSelectedIds,
+  selectEntities,
+  (ids, entities) => {
+    return ids.map(id => entities[id])
+  }
+);

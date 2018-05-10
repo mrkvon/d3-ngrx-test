@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { select, Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Observable, fromEvent } from 'rxjs';
+import { withLatestFrom, map, tap } from 'rxjs/operators';
 
 import * as nodeActions from 'src/app/node.actions';
 import * as edgeActions from 'src/app/edge.actions';
@@ -8,7 +9,7 @@ import * as edgeActions from 'src/app/edge.actions';
 import { Node } from 'src/app/node.model';
 import { Edge } from 'src/app/edge.model';
 
-import * as fromStore from 'src/app/reducers';
+import * as fromRoot from 'src/app/reducers';
 
 @Component({
   selector: 'app-graph-page',
@@ -17,20 +18,50 @@ import * as fromStore from 'src/app/reducers';
 })
 export class GraphPageComponent implements OnInit {
 
-  nodes: Observable<Node[]>;
-  edges: Observable<Edge[]>;
+  @ViewChild('addNodeButton') addNodeButton;
+  @ViewChild('removeNodeButton') removeNodeButton;
+  addNodeClicks$: Observable<void>;
+  removeNodeClicks$: Observable<void>;
 
-  constructor(private store: Store<fromStore.State>) {
+  nodes$: Observable<Node[]>;
+  edges$: Observable<Edge[]>;
+  selectedNodes$: Observable<Node[]>;
+
+  constructor(private store: Store<fromRoot.State>) {
     // initialize graph
-    const nodeCount = 16
+    const nodeCount = 8;
     this.store.dispatch(new nodeActions.AddNodes({ nodes: generateNodes(nodeCount) }));
     this.store.dispatch(new edgeActions.AddEdges({ edges: generateEdges(nodeCount) }));
 
-    this.nodes = this.store.pipe(select((state: any) => state.node.ids.map(id => state.node.entities[id])));
-    this.edges = this.store.pipe(select((state: any) => state.edge.ids.map(id => state.edge.entities[id])));
+    this.nodes$ = this.store.pipe(select(fromRoot.getAllNodes));
+    this.edges$ = this.store.pipe(select(fromRoot.getAllEdges));
+    this.selectedNodes$ = this.store.pipe(select(fromRoot.getSelectedNodes));
   }
 
   ngOnInit() {
+    this.addNodeClicks$ = fromEvent(this.addNodeButton.nativeElement, 'click')
+      .pipe(
+        withLatestFrom(this.nodes$),
+        map(([_a, nodes]) => nodes)
+      )
+      .subscribe((nodes) => {
+        const nodeCount = nodes.length;
+        this.store.dispatch(new nodeActions.AddNode({ node: { id: String(nodes.length) } }))
+        this.store.dispatch(new edgeActions.AddEdges({ edges: generateEdges(nodeCount + 1) }));
+      })
+
+    this.removeNodeClicks$ = fromEvent(this.removeNodeButton.nativeElement, 'click')
+      .pipe(
+        withLatestFrom(this.nodes$),
+        map(([_a, nodes]) => nodes)
+      )
+      .subscribe((nodes) => {
+        this.store.dispatch(new nodeActions.DeleteNode({ id: String(nodes.length - 1) }))
+      })
+  }
+
+  onToggleSelection(id) {
+    this.store.dispatch(new nodeActions.ToggleNodeSelection({ id }));
   }
 
 }

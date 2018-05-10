@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import * as d3 from 'd3';
 import { Node } from 'src/app/node.model';
 import { Edge } from 'src/app/edge.model';
@@ -10,26 +10,20 @@ import { Edge } from 'src/app/edge.model';
 })
 export class GraphComponent implements OnInit {
 
+  @Output() select: EventEmitter<string> = new EventEmitter<string>();
   @Input() nodes: Node[] = [];
+  @Input() selectedNodes: Node[] = [];
   @Input() edges: Edge[] = [];
 
   constructor() { }
 
-/*  private rawGraph = {
-    nodes: [],
-    edges: []
-    // [[0, 1], [0, 2], [0, 4], [1, 3], [1, 5], [2, 3], [2, 6], [3, 7], [4, 5], [4, 6], [5, 7], [6, 7]]
-  };
-*/
   private simulation = d3.forceSimulation();
 
   ngOnInit() {
-    // const nodeCount = 16;
-    // this.rawGraph.nodes = Array.from(Array(nodeCount).keys());
-    // this.rawGraph.edges = generateEdges(nodeCount);
     const nodes = this.nodes.map(node => ({ id: node.id }));
     const edges = this.edges.map(edge => ({ source: nodes[edge.source], target: nodes[edge.target] }))
     this.simulation.nodes(nodes)
+      .alphaTarget(1)
       .force('charge', d3.forceManyBody())
       .force('link', d3.forceLink(edges))
       .force('center', d3.forceCenter(100, 100));
@@ -49,7 +43,7 @@ export class GraphComponent implements OnInit {
   }
 
   dragstarted = () => {
-    if (!d3.event.active) this.simulation.alphaTarget(0.3).restart();
+    if (!d3.event.active) this.simulation.alphaTarget(1).restart();
     d3.event.subject.fx = d3.event.subject.x;
     d3.event.subject.fy = d3.event.subject.y;
   }
@@ -65,17 +59,18 @@ export class GraphComponent implements OnInit {
     d3.event.subject.fy = null;
   }
 
-
   get graph() {
     const nodes = this.simulation.nodes();
+    const selectedNodes = nodes.filter(node => this.selectedNodes.map(selectedNode => selectedNode.id).includes(node['id']))
+
     const edges = this.edges.map(edge => ([nodes[edge.source], nodes[edge.target]]))
-    return { nodes, edges }
+    return { nodes, edges, selectedNodes }
   }
 
   onCircleClick(i) {
-    console.log(this.graph.nodes[i]);
+    this.select.emit(i);
   }
 
-  stringify = JSON.stringify
+  // stringify = JSON.stringify
 
 }
